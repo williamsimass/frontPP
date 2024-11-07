@@ -21,11 +21,12 @@
     "xlsx": "^0.18.5"
   },
   "scripts": {
-    "start": "concurrently \"npm run start-backend\" \"react-scripts --openssl-legacy-provider start\"",
-    "start-backend": "cd ./backend && npm start",
+    "start": "react-scripts --openssl-legacy-provider start",  
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "install-backend": "cd ./backend && npm install",  
+    "start-backend": "cd ./backend && npm start"  
   },
   "eslintConfig": {
     "extends": [
