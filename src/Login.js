@@ -6,23 +6,14 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const onFinish = async (values) => {
+  const onFinish = (values) => {
     setLoading(true);
-    try {
-      // Replace with your authentication API request
-      const response = await axios.post('/api/login', values); 
-      
-      if (response.data.success) {
-        message.success('Login bem-sucedido!');
-        navigate('/home'); // Redirect to Home page on successful login
-      } else {
-        message.error('Credenciais inválidas.');
-      }
-    } catch (error) {
-      message.error('Erro ao realizar login.');
-    } finally {
+    setTimeout(() => {
+      // Simular sucesso no login, independentemente do nome de usuário ou senha
+      message.success('Login bem-sucedido!');
+      navigate('/home'); // Redireciona para a página principal
       setLoading(false);
-    }
+    }, 1000);
   };
 
   return (
@@ -45,13 +36,7 @@ const Login = () => {
           <Input.Password placeholder="Senha" />
         </Form.Item>
         <Form.Item>
-          <Button 
-            type="primary" 
-            htmlType="submit" 
-            loading={loading} 
-            style={{ width: '100%' }} 
-            disabled={loading} // Disable input during loading
-          >
+          <Button type="primary" htmlType="submit" loading={loading} style={{ width: '100%' }}>
             Entrar
           </Button>
         </Form.Item>
