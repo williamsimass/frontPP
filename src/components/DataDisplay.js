@@ -175,6 +175,7 @@ const DataDisplay = () => {
       {/* Botões separados */}
       <FiltroAvancadoButton onClick={showModal} />
       <GerarRelatorioButton onClick={showConfirmModal} />
+      
 
       {/* Modal para selecionar colunas */}
       <Modal
@@ -220,17 +221,22 @@ const DataDisplay = () => {
         okText="Gerar e Baixar"
         cancelText="Cancelar"
       >
-        <p>Tem certeza de que deseja gerar o relatório com os filtros aplicados?</p>
+        <p>Você tem certeza de que deseja gerar e baixar o relatório com as colunas selecionadas?</p>
       </Modal>
 
-      {/* Tabela */}
-      <Table
-        columns={filteredColumns}
-        dataSource={paginatedData}
-        rowKey="id"
-        pagination={false}
-        size="middle"
-      />
+      {/* Tabela de Dados */}
+      <div style={{ overflowX: 'auto' }}>
+        <Table
+          dataSource={paginatedData}
+          columns={filteredColumns.length ? filteredColumns : columnsOptions.map(col => ({
+            title: col.label,
+            dataIndex: col.value,
+            key: col.value
+          }))}
+          pagination={false} 
+          scroll={{ x: 'max-content' }} 
+        />
+      </div>
 
       {/* Paginação */}
       <Pagination
@@ -238,8 +244,7 @@ const DataDisplay = () => {
         pageSize={pageSize}
         total={filteredData.length}
         onChange={handlePaginationChange}
-        showSizeChanger
-        onShowSizeChange={(current, size) => setPageSize(size)}
+        style={{ marginTop: '16px' }}
       />
     </div>
   );
