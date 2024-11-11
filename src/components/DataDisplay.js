@@ -60,6 +60,7 @@ const DataDisplay = () => {
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
+/*ATUALIZAÇÃO dia 11/11*/
 
   const columnsOptions = [
     { label: 'Envolvido', value: 'ENVOLVIDO' },
