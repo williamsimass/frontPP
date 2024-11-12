@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Table, Pagination, Spin, Input, Modal, Checkbox, Row, Col } from 'antd';
+import { Table, Pagination, Spin, Input, Modal, Checkbox, Row, Col, message } from 'antd';
 import * as XLSX from 'xlsx';
-import FiltroAvancadoButton from './buttons/FiltroAvancadoButton';
+import FiltroAvancadoButton from './buttons/FiltroAvancadoButton'; // Verifique o caminho aqui
 import GerarRelatorioButton from './buttons/GerarRelatorioButton';
 import UploadButton from './buttons/UploadButton';
 
@@ -18,6 +18,7 @@ const DataDisplay = () => {
   const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
   const [selectedColumns, setSelectedColumns] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  const [filteredColumns, setFilteredColumns] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,11 +47,6 @@ const DataDisplay = () => {
     setFilteredData(filtered);
   };
 
-  const handleCapsLockCheck = (e) => {
-    const isCapsLockOn = e.getModifierState && e.getModifierState('CapsLock');
-    setCapsLockOn(isCapsLockOn);
-  };
-
   const handlePaginationChange = (page, size) => {
     setCurrentPage(page);
     setPageSize(size);
@@ -60,103 +56,87 @@ const DataDisplay = () => {
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
-/*ATUALIZAÇÃO dia 11/11*/
 
   const columnsOptions = [
-    { label: 'Envolvido', value: 'ENVOLVIDO' },
-    { label: 'Processo Judicial', value: 'PROCESSO_JUDICIAL' },
-    { label: 'Autor Falecido', value: 'AUTOR_FALECIDO' },
-    { label: 'Ano do Óbito', value: 'ANO_DO_OBITO' },
-    { label: 'Tipo de Procuração', value: 'TIPO_DE_PROCURACAO' },
-    { label: 'Se Analfabeto, Nome Pessoa Assinou/Rogo', value: 'SE_ANALFABETO_NOME_PESSOA_ASSINOU_ROGO' },
-    { label: 'Se Analfabeto, Testemunha 1', value: 'SE_ANALFABETO_TESTEMUNHA_1' },
-    { label: 'Se Analfabeto, Testemunha 2', value: 'SE_ANALFABETO_TESTEMUNHA_2' },
-    { label: 'Tipo de Comprovante', value: 'TIPO_DE_COMPROVANTE' },
-    { label: 'Nome de Terceiro?', value: 'NOME_DE_TERCEIRO' },
-    { label: 'Se Sim, Qual Nome Terceiro', value: 'SE_SIM_QUAL_NOME_TERCEIRO' },
-    { label: 'Número da Linha/Medidor/Hidrômetro', value: 'NUMERO_LINHA_MEDIDOR_HIDROMETRO' },
-    { label: 'Código Cliente/Usuário/Matrícula', value: 'CODIGO_CLIENTE_USUARIO_MATRICULA' },
-    { label: 'Número do Contrato/Conta', value: 'NUMERO_CONTRATO_CONTA' },
-    { label: 'Número da Fatura/Nota Fiscal', value: 'NUMERO_FATURA_NOTA_FISCAL' },
-    { label: 'Código Débito Automático', value: 'CODIGO_DEBITO_AUTOMATICO' },
-    { label: 'Código de Barras', value: 'CODIGO_BARRAS' },
-    { label: 'Valor da Fatura', value: 'VALOR_FATURA' },
-    { label: 'Comprovante de Residência com Suspeita de Fraude', value: 'COMPROVANTE_RESIDENCIA_COM_SUSPEITA_DE_FRAUDE' },
-    { label: 'Advogado ou Parte Não Compareceram à Audiência', value: 'ADVOGADO_OU_PARTE_NAO_COMPARECERAM_A_AUDIECIA' },
-    { label: 'Decisões com Aplicação de Multa por Litigância de Má-fé', value: 'HA_DECISOES_COM_APLICACAO_DE_MULTA_POR_LITIGANCIA_DE_MA_FE' },
-    { label: 'Decisões com Expedição de Ofício', value: 'HA_DECISOES_COM_EXPEDICAO_DE_OFICIO' },
-    { label: 'A Parte Alegou Desconhecer Ação e/ou Advogado', value: 'A_PARTE_ALEGA_DESCONHECER_ACAO_E_OU_ADVOGADO' },
-    { label: 'Decisão que Faz Menção à Litigância Predatória', value: 'HA_DECISAO_QUE_FAZ_MENCAO_A_LITIGANCIA_PREDATORIA' },
-    { label: 'Observações', value: 'OBSERVACOES' },
-    { label: 'Advogado da Parte', value: 'ADVOGADO_PARTE' },
-    { label: 'Análise', value: 'ANALISE' },
+    { label: 'Envolvido', value: 'envolvido' },
+    { label: 'Processo Judicial', value: 'processo_judicial' },
+    { label: 'Autor Falecido', value: 'autor_falecido' },
+    { label: 'Ano do Óbito', value: 'ano_do_obito' },
+    { label: 'Tipo de Procuração', value: 'tipo_de_procuracao' },
+    { label: 'Se Analfabeto, Nome Pessoa Assinou/Rogo', value: 'se_analfabeto_nome_pessoa_assinou_rogo' },
+    { label: 'Se Analfabeto, Testemunha 1', value: 'se_analfabeto_testemunha_1' },
+    { label: 'Se Analfabeto, Testemunha 2', value: 'se_analfabeto_testemunha_2' },
+    { label: 'Tipo de Comprovante', value: 'tipo_de_comprovante' },
+    { label: 'Nome de Terceiro?', value: 'nome_de_terceiro' },
+    { label: 'Se Sim, Qual Nome Terceiro', value: 'se_sim_qual_nome_terceiro' },
+    { label: 'Número da Linha/Medidor/Hidrômetro', value: 'numero_linha_medidor_hidrometro' },
+    { label: 'Código Cliente/Usuário/Matrícula', value: 'codigo_cliente_usuario_matricula' },
+    { label: 'Número do Contrato/Conta', value: 'numero_contrato_conta' },
+    { label: 'Número da Fatura/Nota Fiscal', value: 'numero_fatura_nota_fiscal' },
+    { label: 'Código Débito Automático', value: 'codigo_debito_automatico' },
+    { label: 'Código de Barras', value: 'codigo_barras' },
+    { label: 'Valor da Fatura', value: 'valor_fatura' },
+    { label: 'Comprovante de Residência com Suspeita de Fraude', value: 'comprovante_residencia_com_suspeita_de_fraude' },
+    { label: 'Advogado ou Parte Não Compareceram à Audiência', value: 'advogado_ou_parte_nao_compareceram_a_audiecia' },
+    { label: 'Decisões com Aplicação de Multa por Litigância de Má-fé', value: 'ha_decisoes_com_aplicacao_de_multa_por_litigancia_de_ma_fe' },
+    { label: 'Decisões com Expedição de Ofício', value: 'ha_decisoes_com_expedicao_de_oficio' },
+    { label: 'A Parte Alegou Desconhecer Ação e/ou Advogado', value: 'a_parte_alega_desconhecer_acao_e_ou_advogado' },
+    { label: 'Decisão que Faz Menção à Litigância Predatória', value: 'ha_decisao_que_faz_mencao_a_litigancia_predatoria' },
+    { label: 'Observações', value: 'observacoes' },
+    { label: 'Advogado da Parte', value: 'advogado_parte' },
+    { label: 'Análise', value: 'analise' },
   ];
-  
-
-  const handleCheckboxChange = (checkedValues) => {
-    setSelectedColumns(checkedValues);
-  };
-
-  const handleSelectAllChange = (e) => {
-    const checked = e.target.checked;
-    if (checked) {
-      setSelectedColumns(columnsOptions.map(col => col.value));
-    } else {
-      setSelectedColumns([]);
-    }
-    setSelectAll(checked);
-  };
-
-  const showModal = () => {
-    setIsModalVisible(true);
-  };
-
-  const handleCancel = () => {
-    setIsModalVisible(false);
-  };
 
   const handleApplyFilters = () => {
-    setIsModalVisible(false);
+    const filteredColumns = columnsOptions.filter(col =>
+      selectedColumns.includes(col.value)
+    ).map(col => ({
+      title: col.label,
+      dataIndex: col.value,
+      key: col.value,
+      render: text => text === 'NaN' ? 'Não disponível' : text, // Para "NaN"
+    }));
+
+    setFilteredColumns(filteredColumns); // Atualiza as colunas filtradas
+    setIsModalVisible(false); // Fecha o modal
   };
 
-  const showConfirmModal = () => {
+  const filteredColumnsToShow = filteredColumns.length > 0 ? filteredColumns : columnsOptions.map(col => ({
+    title: col.label,
+    dataIndex: col.value,
+    key: col.value,
+    render: text => text === 'NaN' ? 'Não disponível' : text, // Tratamento para "NaN"
+  }));
+
+  const handleGenerateReport = () => {
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(filteredData, { header: filteredColumnsToShow.map(col => col.title) });
+    XLSX.utils.book_append_sheet(wb, ws, 'Relatório');
+    
+    // Abre o modal de confirmação
     setIsConfirmModalVisible(true);
   };
 
-  const handleConfirmCancel = () => {
-    setIsConfirmModalVisible(false);
-  };
-
-  const handleConfirmOk = () => {
-    generateReport();
-    setIsConfirmModalVisible(false);
-  };
-
-  const generateReport = () => {
-    const filteredColumns = columnsOptions.filter(column => 
-      selectedColumns.includes(column.value)
-    );
-
-    const ws = XLSX.utils.json_to_sheet(filteredData.map(item => {
-      let result = {};
+  const handleConfirmDownload = () => {
+    // Mapeia os dados novamente para incluir apenas as colunas filtradas
+    const filteredDataForExcel = filteredData.map(item => {
+      const filteredItem = {};
       selectedColumns.forEach(col => {
-        result[columnsOptions.find(option => option.value === col)?.label] = item[col];
+        filteredItem[col] = item[col];
       });
-      return result;
-    }));
-
+      return filteredItem;
+    });
+  
+    // Cria a planilha novamente
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Relatório");
-    XLSX.writeFile(wb, "relatorio.xlsx");
+    const ws = XLSX.utils.json_to_sheet(filteredDataForExcel, { header: selectedColumns });
+    XLSX.utils.book_append_sheet(wb, ws, 'Relatório');
+    XLSX.writeFile(wb, 'relatorio.xlsx');
+  
+    // Mensagem de sucesso
+    message.success('Relatório gerado com sucesso!');
+    setIsConfirmModalVisible(false); // Fecha o modal de confirmação
   };
-
-  const filteredColumns = columnsOptions.filter(column => 
-    selectedColumns.includes(column.value)
-  ).map(col => ({
-    title: col.label,
-    dataIndex: col.value,
-    key: col.value
-  }));
 
   if (loading) return <Spin size="large" />;
 
@@ -169,27 +149,25 @@ const DataDisplay = () => {
         placeholder="Filtrar dados..."
         value={filterText}
         onChange={handleFilterChange}
-        onKeyUp={handleCapsLockCheck}
         style={{ marginBottom: '16px' }}
       />
 
       {/* Botões separados */}
-      <FiltroAvancadoButton onClick={showModal} />
-      <GerarRelatorioButton onClick={showConfirmModal} />
-      
+      <FiltroAvancadoButton onClick={() => setIsModalVisible(true)} />
+      <GerarRelatorioButton onClick={handleGenerateReport} />
 
       {/* Modal para selecionar colunas */}
       <Modal
         title="Filtros Avançados"
         visible={isModalVisible}
+        onCancel={() => setIsModalVisible(false)}
         onOk={handleApplyFilters}
-        onCancel={handleCancel}
         width={600}
       >
         <Checkbox
           indeterminate={selectedColumns.length > 0 && selectedColumns.length < columnsOptions.length}
           checked={selectAll}
-          onChange={handleSelectAllChange}
+          onChange={(e) => setSelectAll(e.target.checked)}
           style={{ marginBottom: '16px', display: 'block' }}
         >
           Selecionar Todos
@@ -200,11 +178,12 @@ const DataDisplay = () => {
               <Checkbox
                 value={option.value}
                 checked={selectedColumns.includes(option.value)}
-                onChange={(e) => handleCheckboxChange(
-                  e.target.checked
+                onChange={(e) => {
+                  const updatedColumns = e.target.checked
                     ? [...selectedColumns, e.target.value]
-                    : selectedColumns.filter(col => col !== e.target.value)
-                )}
+                    : selectedColumns.filter(col => col !== e.target.value);
+                  setSelectedColumns(updatedColumns);
+                }}
               >
                 {option.label}
               </Checkbox>
@@ -213,31 +192,13 @@ const DataDisplay = () => {
         </Row>
       </Modal>
 
-      {/* Modal de confirmação */}
-      <Modal
-        title="Confirmar Geração de Relatório"
-        visible={isConfirmModalVisible}
-        onOk={handleConfirmOk}
-        onCancel={handleConfirmCancel}
-        okText="Gerar e Baixar"
-        cancelText="Cancelar"
-      >
-        <p>Você tem certeza de que deseja gerar e baixar o relatório com as colunas selecionadas?</p>
-      </Modal>
-
-      {/* Tabela de Dados */}
-      <div style={{ overflowX: 'auto' }}>
-        <Table
-          dataSource={paginatedData}
-          columns={filteredColumns.length ? filteredColumns : columnsOptions.map(col => ({
-            title: col.label,
-            dataIndex: col.value,
-            key: col.value
-          }))}
-          pagination={false} 
-          scroll={{ x: 'max-content' }} 
-        />
-      </div>
+      {/* Tabela de Dados com rolagem horizontal */}
+      <Table
+        dataSource={paginatedData}
+        columns={filteredColumnsToShow}
+        pagination={false}
+        scroll={{ x: 'max-content' }} // Adiciona rolagem horizontal
+      />
 
       {/* Paginação */}
       <Pagination
@@ -247,6 +208,16 @@ const DataDisplay = () => {
         onChange={handlePaginationChange}
         style={{ marginTop: '16px' }}
       />
+
+      {/* Modal de confirmação */}
+      <Modal
+        title="Confirmar Geração do Relatório"
+        visible={isConfirmModalVisible}
+        onCancel={() => setIsConfirmModalVisible(false)}
+        onOk={handleConfirmDownload}
+      >
+        <p>Tem certeza de que deseja gerar o relatório com os dados selecionados?</p>
+      </Modal>
     </div>
   );
 };
